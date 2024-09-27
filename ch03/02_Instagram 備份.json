@@ -1,0 +1,577 @@
+{
+    "name": "備份 Instagram",
+    "flow": [
+        {
+            "id": 1,
+            "module": "instagram:WatchMedia",
+            "version": 4,
+            "parameters": {
+                "__IMTCONN__": 21214,
+                "limit": 2
+            },
+            "mapper": {},
+            "metadata": {
+                "designer": {
+                    "x": 0,
+                    "y": 0
+                },
+                "restore": {
+                    "parameters": {
+                        "__IMTCONN__": {
+                            "label": "Instagram All post (meeinoffice)",
+                            "data": {
+                                "scoped": "true",
+                                "connection": "instagram2"
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "__IMTCONN__",
+                        "type": "account:instagram2",
+                        "label": "Connection",
+                        "required": true
+                    },
+                    {
+                        "name": "limit",
+                        "type": "uinteger",
+                        "label": "Limit",
+                        "required": true
+                    }
+                ]
+            }
+        },
+        {
+            "id": 3,
+            "module": "openai-gpt-3:analyzeImages",
+            "version": 1,
+            "parameters": {
+                "__IMTCONN__": 25783
+            },
+            "filter": {
+                "name": "阻擋短片",
+                "conditions": [
+                    [
+                        {
+                            "a": "{{1.media_type}}",
+                            "b": "VIDEO",
+                            "o": "text:notequal"
+                        }
+                    ]
+                ]
+            },
+            "mapper": {
+                "prompt": "請描述這張照片的內容",
+                "images": [
+                    {
+                        "imageUploadType": "url",
+                        "imageUrl": "{{1.media_url}}"
+                    }
+                ],
+                "model": "gpt-4o-mini",
+                "max_tokens": "300",
+                "temperature": "1",
+                "top_p": "1",
+                "n_completions": "1"
+            },
+            "metadata": {
+                "designer": {
+                    "x": 300,
+                    "y": 0
+                },
+                "restore": {
+                    "parameters": {
+                        "__IMTCONN__": {
+                            "label": "My OpenAI connection",
+                            "data": {
+                                "scoped": "true",
+                                "connection": "openai-gpt-3"
+                            }
+                        }
+                    },
+                    "expect": {
+                        "images": {
+                            "mode": "chose",
+                            "items": [
+                                {
+                                    "imageUploadType": {
+                                        "mode": "chose",
+                                        "label": "Image URL"
+                                    }
+                                }
+                            ]
+                        },
+                        "model": {
+                            "mode": "chose",
+                            "label": "gpt-4o-mini"
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "__IMTCONN__",
+                        "type": "account:openai-gpt-3",
+                        "label": "Connection",
+                        "required": true
+                    }
+                ],
+                "expect": [
+                    {
+                        "name": "prompt",
+                        "type": "text",
+                        "label": "Prompt",
+                        "required": true
+                    },
+                    {
+                        "name": "images",
+                        "type": "array",
+                        "label": "Images",
+                        "required": true,
+                        "spec": {
+                            "spec": [
+                                {
+                                    "name": "imageUploadType",
+                                    "type": "select",
+                                    "label": "How would you like to specify an image?",
+                                    "options": [
+                                        {
+                                            "label": "Image URL",
+                                            "value": "url",
+                                            "nested": [
+                                                {
+                                                    "help": "Public URL of the image. For example, `https://getmyimage.com/myimage.png`.",
+                                                    "mode": "edit",
+                                                    "name": "imageUrl",
+                                                    "type": "url",
+                                                    "label": "Image URL",
+                                                    "mappable": {
+                                                        "help": "Public URL of the image. For example, `https://getmyimage.com/myimage.png`."
+                                                    },
+                                                    "required": true
+                                                }
+                                            ],
+                                            "default": true
+                                        },
+                                        {
+                                            "label": "Image File",
+                                            "value": "imageFile",
+                                            "nested": [
+                                                {
+                                                    "help": "Binary data of the image. For example, you can retrieve the binary data of your image using the __HTTP: Get a file__ module.",
+                                                    "name": "imageFileData",
+                                                    "type": "buffer",
+                                                    "label": "Image File",
+                                                    "required": true,
+                                                    "semantic": "file:data"
+                                                }
+                                            ]
+                                        }
+                                    ],
+                                    "required": true
+                                }
+                            ],
+                            "type": "collection",
+                            "label": "Image",
+                            "name": "value"
+                        }
+                    },
+                    {
+                        "name": "model",
+                        "type": "select",
+                        "label": "Model",
+                        "required": true
+                    },
+                    {
+                        "name": "max_tokens",
+                        "type": "number",
+                        "label": "Max Tokens"
+                    },
+                    {
+                        "name": "temperature",
+                        "type": "number",
+                        "label": "Temperature",
+                        "validate": {
+                            "max": 2,
+                            "min": 0
+                        }
+                    },
+                    {
+                        "name": "top_p",
+                        "type": "number",
+                        "label": "Top P",
+                        "validate": {
+                            "max": 1,
+                            "min": 0
+                        }
+                    },
+                    {
+                        "name": "n_completions",
+                        "type": "number",
+                        "label": "Number"
+                    }
+                ]
+            }
+        },
+        {
+            "id": 7,
+            "module": "util:Switcher",
+            "version": 1,
+            "parameters": {},
+            "mapper": {
+                "input": "{{length(1.caption)}}",
+                "useRegExpMatch": false,
+                "casesTable": [
+                    {
+                        "pattern": "0",
+                        "output": "無標題"
+                    }
+                ],
+                "elseOutput": "{{1.caption}}"
+            },
+            "metadata": {
+                "designer": {
+                    "x": 600,
+                    "y": 0
+                },
+                "restore": {
+                    "expect": {
+                        "casesTable": {
+                            "mode": "chose",
+                            "items": [
+                                null
+                            ]
+                        }
+                    }
+                },
+                "expect": [
+                    {
+                        "name": "input",
+                        "type": "text",
+                        "label": "Input"
+                    },
+                    {
+                        "name": "useRegExpMatch",
+                        "type": "boolean",
+                        "label": "Use regular expressions to match",
+                        "required": true
+                    },
+                    {
+                        "name": "casesTable",
+                        "type": "array",
+                        "label": "Cases",
+                        "required": true,
+                        "spec": [
+                            {
+                                "name": "pattern",
+                                "label": "Pattern",
+                                "type": "text"
+                            },
+                            {
+                                "name": "output",
+                                "label": "Output",
+                                "type": "any"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "elseOutput",
+                        "type": "any",
+                        "label": "Else"
+                    }
+                ]
+            }
+        },
+        {
+            "id": 4,
+            "module": "notion:appendAPageContent",
+            "version": 1,
+            "parameters": {
+                "__IMTCONN__": 35653
+            },
+            "mapper": {
+                "page": "08654160-3f3e-4d32-9a55-448c2559eb67",
+                "objects": [
+                    {
+                        "type": "heading_3",
+                        "heading_3": {
+                            "text": [
+                                {
+                                    "type": "text",
+                                    "annotations": {
+                                        "color": "default"
+                                    },
+                                    "text": {
+                                        "content": "{{7.output}}",
+                                        "link": "{{1.permalink}}"
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "type": "paragraph",
+                        "paragraph": {
+                            "text": [
+                                {
+                                    "type": "text",
+                                    "annotations": {
+                                        "color": "default"
+                                    },
+                                    "text": {
+                                        "content": "{{3.result}}"
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "type": "image",
+                        "image": {
+                            "external": {
+                                "url": "{{1.media_url}}"
+                            }
+                        }
+                    }
+                ]
+            },
+            "metadata": {
+                "designer": {
+                    "x": 900,
+                    "y": 0
+                },
+                "restore": {
+                    "parameters": {
+                        "__IMTCONN__": {
+                            "label": "My Notion Public connection (旗標 黃's Notion)",
+                            "data": {
+                                "scoped": "true",
+                                "connection": "notion2"
+                            }
+                        }
+                    },
+                    "expect": {
+                        "page": {
+                            "mode": "chose",
+                            "label": "Instagram 備份"
+                        },
+                        "objects": {
+                            "mode": "chose",
+                            "items": [
+                                {
+                                    "type": {
+                                        "mode": "chose",
+                                        "label": "Heading 3"
+                                    },
+                                    "heading_3": {
+                                        "nested": {
+                                            "text": {
+                                                "mode": "chose",
+                                                "items": [
+                                                    {
+                                                        "type": {
+                                                            "mode": "chose",
+                                                            "label": "Text"
+                                                        },
+                                                        "annotations": {
+                                                            "nested": {
+                                                                "bold": {
+                                                                    "mode": "chose"
+                                                                },
+                                                                "italic": {
+                                                                    "mode": "chose"
+                                                                },
+                                                                "strikethrough": {
+                                                                    "mode": "chose"
+                                                                },
+                                                                "underline": {
+                                                                    "mode": "chose"
+                                                                },
+                                                                "code": {
+                                                                    "mode": "chose"
+                                                                },
+                                                                "color": {
+                                                                    "mode": "chose",
+                                                                    "label": "default"
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    }
+                                },
+                                {
+                                    "type": {
+                                        "mode": "chose",
+                                        "label": "Paragraph"
+                                    },
+                                    "paragraph": {
+                                        "nested": {
+                                            "text": {
+                                                "mode": "chose",
+                                                "items": [
+                                                    {
+                                                        "type": {
+                                                            "mode": "chose",
+                                                            "label": "Text"
+                                                        },
+                                                        "annotations": {
+                                                            "nested": {
+                                                                "bold": {
+                                                                    "mode": "chose"
+                                                                },
+                                                                "italic": {
+                                                                    "mode": "chose"
+                                                                },
+                                                                "strikethrough": {
+                                                                    "mode": "chose"
+                                                                },
+                                                                "underline": {
+                                                                    "mode": "chose"
+                                                                },
+                                                                "code": {
+                                                                    "mode": "chose"
+                                                                },
+                                                                "color": {
+                                                                    "mode": "chose",
+                                                                    "label": "default"
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    }
+                                },
+                                {
+                                    "type": {
+                                        "mode": "chose",
+                                        "label": "Image"
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "__IMTCONN__",
+                        "type": "account:notion2,notion3",
+                        "label": "Connection",
+                        "required": true
+                    }
+                ],
+                "expect": [
+                    {
+                        "name": "page",
+                        "type": "select",
+                        "label": "Page ID",
+                        "mode": "edit",
+                        "required": true
+                    },
+                    {
+                        "name": "objects",
+                        "type": "array",
+                        "label": "Content Objects",
+                        "required": true,
+                        "spec": [
+                            {
+                                "name": "type",
+                                "type": "select",
+                                "label": "Type",
+                                "options": {
+                                    "store": [
+                                        {
+                                            "label": "Paragraph",
+                                            "value": "paragraph"
+                                        },
+                                        {
+                                            "label": "Heading 1",
+                                            "value": "heading_1"
+                                        },
+                                        {
+                                            "label": "Heading 2",
+                                            "value": "heading_2"
+                                        },
+                                        {
+                                            "label": "Heading 3",
+                                            "value": "heading_3"
+                                        },
+                                        {
+                                            "label": "Bulleted list item",
+                                            "value": "bulleted_list_item"
+                                        },
+                                        {
+                                            "label": "Numbered list item",
+                                            "value": "numbered_list_item"
+                                        },
+                                        {
+                                            "label": "Toggle",
+                                            "value": "toggle"
+                                        },
+                                        {
+                                            "label": "To do",
+                                            "value": "to_do"
+                                        },
+                                        {
+                                            "label": "Image",
+                                            "value": "image"
+                                        },
+                                        {
+                                            "label": "Embed",
+                                            "value": "embed"
+                                        },
+                                        {
+                                            "label": "File",
+                                            "value": "file"
+                                        },
+                                        {
+                                            "label": "PDF",
+                                            "value": "pdf"
+                                        },
+                                        {
+                                            "label": "Video",
+                                            "value": "video"
+                                        },
+                                        {
+                                            "label": "Breadcrumb",
+                                            "value": "breadcrumb"
+                                        },
+                                        {
+                                            "label": "Divider",
+                                            "value": "divider"
+                                        }
+                                    ]
+                                },
+                                "required": true
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    ],
+    "metadata": {
+        "instant": false,
+        "version": 1,
+        "scenario": {
+            "roundtrips": 1,
+            "maxErrors": 3,
+            "autoCommit": true,
+            "autoCommitTriggerLast": true,
+            "sequential": false,
+            "slots": null,
+            "confidential": false,
+            "dataloss": false,
+            "dlq": false,
+            "freshVariables": false
+        },
+        "designer": {
+            "orphans": []
+        },
+        "zone": "us2.make.com"
+    }
+}

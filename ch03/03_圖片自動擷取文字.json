@@ -1,0 +1,602 @@
+{
+    "name": "自動擷取圖片內文字",
+    "flow": [
+        {
+            "id": 1,
+            "module": "onedrive:watchFilesFolders",
+            "version": 2,
+            "parameters": {
+                "limit": 2,
+                "choose": "create",
+                "folder": "/EAB283470DFB204E!357280",
+                "search": "",
+                "select": "my",
+                "select1": "no",
+                "itemType": "file",
+                "__IMTCONN__": 35814
+            },
+            "mapper": {},
+            "metadata": {
+                "designer": {
+                    "x": 0,
+                    "y": 0
+                },
+                "restore": {
+                    "parameters": {
+                        "choose": {
+                            "label": "By Created Time"
+                        },
+                        "folder": {
+                            "path": [
+                                "要辨識的圖片"
+                            ]
+                        },
+                        "select": {
+                            "label": "My Drive"
+                        },
+                        "select1": {
+                            "label": "No"
+                        },
+                        "itemType": {
+                            "label": "File"
+                        },
+                        "__IMTCONN__": {
+                            "data": {
+                                "scoped": "true",
+                                "connection": "azure"
+                            },
+                            "label": "My Microsoft connection"
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "__IMTCONN__",
+                        "type": "account:azure",
+                        "label": "Connection",
+                        "required": true
+                    },
+                    {
+                        "name": "choose",
+                        "type": "select",
+                        "label": "Watch Files/Folders",
+                        "required": true,
+                        "validate": {
+                            "enum": [
+                                "create",
+                                "update"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "select",
+                        "type": "select",
+                        "label": "Choose your OneDrive location",
+                        "required": true,
+                        "validate": {
+                            "enum": [
+                                "my",
+                                "share",
+                                "site",
+                                "group"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "itemType",
+                        "type": "select",
+                        "label": "Choose an Item Type",
+                        "required": true,
+                        "validate": {
+                            "enum": [
+                                "file",
+                                "folder",
+                                "both"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "type": "uinteger",
+                        "label": "Limit",
+                        "required": true
+                    },
+                    {
+                        "name": "select1",
+                        "type": "select",
+                        "label": "Enable to Enter a Drive ID",
+                        "required": true,
+                        "validate": {
+                            "enum": [
+                                "yes",
+                                "no"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "folder",
+                        "type": "folder",
+                        "label": "Folder"
+                    },
+                    {
+                        "name": "search",
+                        "type": "text",
+                        "label": "Query Search"
+                    }
+                ]
+            }
+        },
+        {
+            "id": 2,
+            "module": "openai-gpt-3:analyzeImages",
+            "version": 1,
+            "parameters": {
+                "__IMTCONN__": 25783
+            },
+            "filter": {
+                "name": "只讓圖片通過",
+                "conditions": [
+                    [
+                        {
+                            "a": "{{1.image}}",
+                            "o": "exist"
+                        }
+                    ]
+                ]
+            },
+            "mapper": {
+                "model": "gpt-4o-mini",
+                "top_p": "1",
+                "images": [
+                    {
+                        "imageUrl": "{{1.`@microsoft.graph.downloadUrl`}}",
+                        "imageUploadType": "url"
+                    }
+                ],
+                "prompt": "取出圖片中的文字, 如果圖片中沒有任何文字, 只要回覆『無文字』, 不要加上額外的任何說明文字",
+                "max_tokens": "1000",
+                "temperature": "1",
+                "n_completions": "1"
+            },
+            "metadata": {
+                "designer": {
+                    "x": 300,
+                    "y": 0
+                },
+                "restore": {
+                    "expect": {
+                        "model": {
+                            "mode": "chose",
+                            "label": "gpt-4o-mini"
+                        },
+                        "images": {
+                            "mode": "chose",
+                            "items": [
+                                {
+                                    "imageUploadType": {
+                                        "mode": "chose",
+                                        "label": "Image URL"
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "parameters": {
+                        "__IMTCONN__": {
+                            "data": {
+                                "scoped": "true",
+                                "connection": "openai-gpt-3"
+                            },
+                            "label": "My OpenAI connection"
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "__IMTCONN__",
+                        "type": "account:openai-gpt-3",
+                        "label": "Connection",
+                        "required": true
+                    }
+                ],
+                "expect": [
+                    {
+                        "name": "prompt",
+                        "type": "text",
+                        "label": "Prompt",
+                        "required": true
+                    },
+                    {
+                        "name": "images",
+                        "spec": {
+                            "name": "value",
+                            "spec": [
+                                {
+                                    "name": "imageUploadType",
+                                    "type": "select",
+                                    "label": "How would you like to specify an image?",
+                                    "options": [
+                                        {
+                                            "label": "Image URL",
+                                            "value": "url",
+                                            "nested": [
+                                                {
+                                                    "help": "Public URL of the image. For example, `https://getmyimage.com/myimage.png`.",
+                                                    "mode": "edit",
+                                                    "name": "imageUrl",
+                                                    "type": "url",
+                                                    "label": "Image URL",
+                                                    "mappable": {
+                                                        "help": "Public URL of the image. For example, `https://getmyimage.com/myimage.png`."
+                                                    },
+                                                    "required": true
+                                                }
+                                            ],
+                                            "default": true
+                                        },
+                                        {
+                                            "label": "Image File",
+                                            "value": "imageFile",
+                                            "nested": [
+                                                {
+                                                    "help": "Binary data of the image. For example, you can retrieve the binary data of your image using the __HTTP: Get a file__ module.",
+                                                    "name": "imageFileData",
+                                                    "type": "buffer",
+                                                    "label": "Image File",
+                                                    "required": true,
+                                                    "semantic": "file:data"
+                                                }
+                                            ]
+                                        }
+                                    ],
+                                    "required": true
+                                }
+                            ],
+                            "type": "collection",
+                            "label": "Image"
+                        },
+                        "type": "array",
+                        "label": "Images",
+                        "required": true
+                    },
+                    {
+                        "name": "model",
+                        "type": "select",
+                        "label": "Model",
+                        "required": true
+                    },
+                    {
+                        "name": "max_tokens",
+                        "type": "number",
+                        "label": "Max Tokens"
+                    },
+                    {
+                        "name": "temperature",
+                        "type": "number",
+                        "label": "Temperature",
+                        "validate": {
+                            "max": 2,
+                            "min": 0
+                        }
+                    },
+                    {
+                        "name": "top_p",
+                        "type": "number",
+                        "label": "Top P",
+                        "validate": {
+                            "max": 1,
+                            "min": 0
+                        }
+                    },
+                    {
+                        "name": "n_completions",
+                        "type": "number",
+                        "label": "Number"
+                    }
+                ]
+            }
+        },
+        {
+            "id": 3,
+            "module": "notion:appendAPageContent",
+            "version": 1,
+            "parameters": {
+                "__IMTCONN__": 35833
+            },
+            "mapper": {
+                "page": "087ae3e9-f31e-43b6-9baf-4f914bcc5a93",
+                "objects": [
+                    {
+                        "type": "paragraph",
+                        "paragraph": {
+                            "text": [
+                                {
+                                    "text": {
+                                        "link": "{{1.`@microsoft.graph.downloadUrl`}}",
+                                        "content": "{{2.result}}"
+                                    },
+                                    "type": "text",
+                                    "annotations": {
+                                        "color": "default"
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ]
+            },
+            "metadata": {
+                "designer": {
+                    "x": 600,
+                    "y": 0
+                },
+                "restore": {
+                    "expect": {
+                        "page": {
+                            "mode": "chose",
+                            "label": "圖片文字"
+                        },
+                        "objects": {
+                            "mode": "chose",
+                            "items": [
+                                {
+                                    "type": {
+                                        "mode": "chose",
+                                        "label": "Paragraph"
+                                    },
+                                    "paragraph": {
+                                        "nested": {
+                                            "text": {
+                                                "mode": "chose",
+                                                "items": [
+                                                    {
+                                                        "type": {
+                                                            "mode": "chose",
+                                                            "label": "Text"
+                                                        },
+                                                        "annotations": {
+                                                            "nested": {
+                                                                "bold": {
+                                                                    "mode": "chose"
+                                                                },
+                                                                "code": {
+                                                                    "mode": "chose"
+                                                                },
+                                                                "color": {
+                                                                    "mode": "chose",
+                                                                    "label": "default"
+                                                                },
+                                                                "italic": {
+                                                                    "mode": "chose"
+                                                                },
+                                                                "underline": {
+                                                                    "mode": "chose"
+                                                                },
+                                                                "strikethrough": {
+                                                                    "mode": "chose"
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "parameters": {
+                        "__IMTCONN__": {
+                            "data": {
+                                "scoped": "true",
+                                "connection": "notion2"
+                            },
+                            "label": "Notion OneNote connection"
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "__IMTCONN__",
+                        "type": "account:notion2,notion3",
+                        "label": "Connection",
+                        "required": true
+                    }
+                ],
+                "expect": [
+                    {
+                        "mode": "edit",
+                        "name": "page",
+                        "type": "select",
+                        "label": "Page ID",
+                        "required": true
+                    },
+                    {
+                        "name": "objects",
+                        "spec": [
+                            {
+                                "name": "type",
+                                "type": "select",
+                                "label": "Type",
+                                "options": {
+                                    "store": [
+                                        {
+                                            "label": "Paragraph",
+                                            "value": "paragraph"
+                                        },
+                                        {
+                                            "label": "Heading 1",
+                                            "value": "heading_1"
+                                        },
+                                        {
+                                            "label": "Heading 2",
+                                            "value": "heading_2"
+                                        },
+                                        {
+                                            "label": "Heading 3",
+                                            "value": "heading_3"
+                                        },
+                                        {
+                                            "label": "Bulleted list item",
+                                            "value": "bulleted_list_item"
+                                        },
+                                        {
+                                            "label": "Numbered list item",
+                                            "value": "numbered_list_item"
+                                        },
+                                        {
+                                            "label": "Toggle",
+                                            "value": "toggle"
+                                        },
+                                        {
+                                            "label": "To do",
+                                            "value": "to_do"
+                                        },
+                                        {
+                                            "label": "Image",
+                                            "value": "image"
+                                        },
+                                        {
+                                            "label": "Embed",
+                                            "value": "embed"
+                                        },
+                                        {
+                                            "label": "File",
+                                            "value": "file"
+                                        },
+                                        {
+                                            "label": "PDF",
+                                            "value": "pdf"
+                                        },
+                                        {
+                                            "label": "Video",
+                                            "value": "video"
+                                        },
+                                        {
+                                            "label": "Breadcrumb",
+                                            "value": "breadcrumb"
+                                        },
+                                        {
+                                            "label": "Divider",
+                                            "value": "divider"
+                                        }
+                                    ]
+                                },
+                                "required": true
+                            }
+                        ],
+                        "type": "array",
+                        "label": "Content Objects",
+                        "required": true
+                    },
+                    {
+                        "mode": "edit",
+                        "name": "page",
+                        "type": "select",
+                        "label": "Page ID",
+                        "required": true
+                    },
+                    {
+                        "name": "objects",
+                        "spec": [
+                            {
+                                "name": "type",
+                                "type": "select",
+                                "label": "Type",
+                                "options": {
+                                    "store": [
+                                        {
+                                            "label": "Paragraph",
+                                            "value": "paragraph"
+                                        },
+                                        {
+                                            "label": "Heading 1",
+                                            "value": "heading_1"
+                                        },
+                                        {
+                                            "label": "Heading 2",
+                                            "value": "heading_2"
+                                        },
+                                        {
+                                            "label": "Heading 3",
+                                            "value": "heading_3"
+                                        },
+                                        {
+                                            "label": "Bulleted list item",
+                                            "value": "bulleted_list_item"
+                                        },
+                                        {
+                                            "label": "Numbered list item",
+                                            "value": "numbered_list_item"
+                                        },
+                                        {
+                                            "label": "Toggle",
+                                            "value": "toggle"
+                                        },
+                                        {
+                                            "label": "To do",
+                                            "value": "to_do"
+                                        },
+                                        {
+                                            "label": "Image",
+                                            "value": "image"
+                                        },
+                                        {
+                                            "label": "Embed",
+                                            "value": "embed"
+                                        },
+                                        {
+                                            "label": "File",
+                                            "value": "file"
+                                        },
+                                        {
+                                            "label": "PDF",
+                                            "value": "pdf"
+                                        },
+                                        {
+                                            "label": "Video",
+                                            "value": "video"
+                                        },
+                                        {
+                                            "label": "Breadcrumb",
+                                            "value": "breadcrumb"
+                                        },
+                                        {
+                                            "label": "Divider",
+                                            "value": "divider"
+                                        }
+                                    ]
+                                },
+                                "required": true
+                            }
+                        ],
+                        "type": "array",
+                        "label": "Content Objects",
+                        "required": true
+                    }
+                ]
+            }
+        }
+    ],
+    "metadata": {
+        "instant": false,
+        "version": 1,
+        "scenario": {
+            "roundtrips": 1,
+            "maxErrors": 3,
+            "autoCommit": true,
+            "autoCommitTriggerLast": true,
+            "sequential": false,
+            "slots": null,
+            "confidential": false,
+            "dataloss": false,
+            "dlq": false,
+            "freshVariables": false
+        },
+        "designer": {
+            "orphans": []
+        },
+        "zone": "us2.make.com"
+    }
+}
