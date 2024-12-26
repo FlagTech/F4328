@@ -1,36 +1,46 @@
 {
-    "name": "Integration Instagram",
+    "name": "instagram_line_notify",
     "flow": [
         {
             "id": 1,
-            "module": "instagram:WatchMedia",
-            "version": 4,
+            "module": "instagram-business:WatchMedia",
+            "version": 1,
             "parameters": {
-                "limit": 2,
-                "__IMTCONN__": 13794
+                "limit": 10,
+                "accountId": "17841471596387704",
+                "__IMTCONN__": 1079923
             },
             "mapper": {},
             "metadata": {
                 "designer": {
-                    "x": 0,
-                    "y": 0
+                    "x": -5,
+                    "y": -5
                 },
                 "restore": {
                     "parameters": {
+                        "accountId": {
+                            "label": "AI 流程自動化工作坊 (@code.weiwei)"
+                        },
                         "__IMTCONN__": {
                             "data": {
                                 "scoped": "true",
-                                "connection": "instagram2"
+                                "connection": "facebook"
                             },
-                            "label": "My Instagram connection (meeinoffice)"
+                            "label": "My Facebook connection"
                         }
                     }
                 },
                 "parameters": [
                     {
                         "name": "__IMTCONN__",
-                        "type": "account:instagram2",
+                        "type": "account:facebook",
                         "label": "Connection",
+                        "required": true
+                    },
+                    {
+                        "name": "accountId",
+                        "type": "select",
+                        "label": "Page",
                         "required": true
                     },
                     {
@@ -43,11 +53,11 @@
             }
         },
         {
-            "id": 2,
+            "id": 3,
             "module": "line:sendANotification",
             "version": 1,
             "parameters": {
-                "__IMTCONN__": 17084
+                "__IMTCONN__": 1093444
             },
             "filter": {
                 "name": "阻擋短片",
@@ -55,28 +65,37 @@
                     [
                         {
                             "a": "{{1.media_type}}",
-                            "b": "VIDEO",
-                            "o": "text:notequal"
+                            "o": "text:notequal",
+                            "b": "VIDEO"
                         }
                     ]
                 ]
             },
             "mapper": {
-                "select": "url",
                 "message": "{{1.caption}}\n{{1.permalink}}",
-                "stickerId": "52114146",
+                "select": "url",
                 "addSticker": true,
+                "notificationDisabled": false,
                 "imageFullsize": "{{1.media_url}}",
                 "imageThumbnail": "{{1.media_url}}",
                 "stickerPackageId": "11539",
-                "notificationDisabled": false
+                "stickerId": "52114146"
             },
             "metadata": {
                 "designer": {
-                    "x": 300,
-                    "y": 0
+                    "x": 295,
+                    "y": -5
                 },
                 "restore": {
+                    "parameters": {
+                        "__IMTCONN__": {
+                            "label": "My LINE (Notify API) connection",
+                            "data": {
+                                "scoped": "true",
+                                "connection": "line"
+                            }
+                        }
+                    },
                     "expect": {
                         "select": {
                             "label": "By URL"
@@ -86,15 +105,6 @@
                         },
                         "notificationDisabled": {
                             "mode": "chose"
-                        }
-                    },
-                    "parameters": {
-                        "__IMTCONN__": {
-                            "data": {
-                                "scoped": "true",
-                                "connection": "line"
-                            },
-                            "label": "My LINE (Notify API) connection"
                         }
                     }
                 },
@@ -111,10 +121,10 @@
                         "name": "message",
                         "type": "text",
                         "label": "Message",
-                        "required": true,
                         "validate": {
                             "max": 1000
-                        }
+                        },
+                        "required": true
                     },
                     {
                         "name": "select",
