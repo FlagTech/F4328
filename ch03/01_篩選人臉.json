@@ -1,13 +1,14 @@
 {
-    "name": "Integration Instagram",
+    "name": "instagram_face_line_notify",
     "flow": [
         {
             "id": 1,
-            "module": "instagram:WatchMedia",
-            "version": 4,
+            "module": "instagram-business:WatchMedia",
+            "version": 1,
             "parameters": {
-                "limit": 2,
-                "__IMTCONN__": 13794
+                "limit": 10,
+                "accountId": "17841471596387704",
+                "__IMTCONN__": 1079923
             },
             "mapper": {},
             "metadata": {
@@ -17,20 +18,29 @@
                 },
                 "restore": {
                     "parameters": {
+                        "accountId": {
+                            "label": "AI 流程自動化工作坊 (@code.weiwei)"
+                        },
                         "__IMTCONN__": {
                             "data": {
                                 "scoped": "true",
-                                "connection": "instagram2"
+                                "connection": "facebook"
                             },
-                            "label": "My Instagram connection (meeinoffice)"
+                            "label": "My Facebook connection"
                         }
                     }
                 },
                 "parameters": [
                     {
                         "name": "__IMTCONN__",
-                        "type": "account:instagram2",
+                        "type": "account:facebook",
                         "label": "Connection",
+                        "required": true
+                    },
+                    {
+                        "name": "accountId",
+                        "type": "select",
+                        "label": "Page",
                         "required": true
                     },
                     {
@@ -43,11 +53,11 @@
             }
         },
         {
-            "id": 3,
+            "id": 4,
             "module": "openai-gpt-3:analyzeImages",
             "version": 1,
             "parameters": {
-                "__IMTCONN__": 25783
+                "__IMTCONN__": 192349
             },
             "filter": {
                 "name": "阻擋短片",
@@ -62,17 +72,17 @@
                 ]
             },
             "mapper": {
-                "model": "gpt-4o-mini",
-                "top_p": "1",
+                "prompt": "請依照照片中是否有真實人臉,回覆以下兩種答覆其\n中一種,除此之外,不要加上任何額外的說明文字:\n有人臉\n沒有人臉",
                 "images": [
                     {
-                        "imageUrl": "{{1.media_url}}",
-                        "imageUploadType": "url"
+                        "imageUploadType": "url",
+                        "imageUrl": "{{1.media_url}}"
                     }
                 ],
-                "prompt": "請依照照片中是否有真實人臉,回覆以下兩種答覆其\n中一種,除此之外,不要加上任何額外的說明文字:\n\n有人臉\n沒有人臉",
-                "max_tokens": "300",
+                "model": "gpt-4o-mini",
+                "max_tokens": "2048",
                 "temperature": "1",
+                "top_p": "1",
                 "n_completions": "1"
             },
             "metadata": {
@@ -81,11 +91,16 @@
                     "y": 0
                 },
                 "restore": {
+                    "parameters": {
+                        "__IMTCONN__": {
+                            "label": "My OpenAI connection",
+                            "data": {
+                                "scoped": "true",
+                                "connection": "openai-gpt-3"
+                            }
+                        }
+                    },
                     "expect": {
-                        "model": {
-                            "mode": "chose",
-                            "label": "gpt-4o-mini"
-                        },
                         "images": {
                             "mode": "chose",
                             "items": [
@@ -96,15 +111,10 @@
                                     }
                                 }
                             ]
-                        }
-                    },
-                    "parameters": {
-                        "__IMTCONN__": {
-                            "data": {
-                                "scoped": "true",
-                                "connection": "openai-gpt-3"
-                            },
-                            "label": "My OpenAI connection"
+                        },
+                        "model": {
+                            "mode": "chose",
+                            "label": "gpt-4o-mini"
                         }
                     }
                 },
@@ -125,8 +135,10 @@
                     },
                     {
                         "name": "images",
+                        "type": "array",
+                        "label": "Images",
+                        "required": true,
                         "spec": {
-                            "name": "value",
                             "spec": [
                                 {
                                     "name": "imageUploadType",
@@ -170,11 +182,9 @@
                                 }
                             ],
                             "type": "collection",
-                            "label": "Image"
-                        },
-                        "type": "array",
-                        "label": "Images",
-                        "required": true
+                            "label": "Image",
+                            "name": "value"
+                        }
                     },
                     {
                         "name": "model",
@@ -184,8 +194,101 @@
                     },
                     {
                         "name": "max_tokens",
+                        "type": "uinteger",
+                        "label": "Max Completion Tokens"
+                    },
+                    {
+                        "name": "temperature",
                         "type": "number",
-                        "label": "Max Tokens"
+                        "label": "Temperature",
+                        "validate": {
+                            "max": 2,
+                            "min": 0
+                        }
+                    },
+                    {
+                        "name": "top_p",
+                        "type": "number",
+                        "label": "Top P",
+                        "validate": {
+                            "max": 1,
+                            "min": 0
+                        }
+                    },
+                    {
+                        "name": "n_completions",
+                        "type": "number",
+                        "label": "Number"
+                    },
+                    {
+                        "name": "prompt",
+                        "type": "text",
+                        "label": "Prompt",
+                        "required": true
+                    },
+                    {
+                        "name": "images",
+                        "type": "array",
+                        "label": "Images",
+                        "required": true,
+                        "spec": {
+                            "spec": [
+                                {
+                                    "name": "imageUploadType",
+                                    "type": "select",
+                                    "label": "How would you like to specify an image?",
+                                    "options": [
+                                        {
+                                            "label": "Image URL",
+                                            "value": "url",
+                                            "nested": [
+                                                {
+                                                    "help": "Public URL of the image. For example, `https://getmyimage.com/myimage.png`.",
+                                                    "mode": "edit",
+                                                    "name": "imageUrl",
+                                                    "type": "url",
+                                                    "label": "Image URL",
+                                                    "mappable": {
+                                                        "help": "Public URL of the image. For example, `https://getmyimage.com/myimage.png`."
+                                                    },
+                                                    "required": true
+                                                }
+                                            ],
+                                            "default": true
+                                        },
+                                        {
+                                            "label": "Image File",
+                                            "value": "imageFile",
+                                            "nested": [
+                                                {
+                                                    "help": "Binary data of the image. For example, you can retrieve the binary data of your image using the __HTTP: Get a file__ module.",
+                                                    "name": "imageFileData",
+                                                    "type": "buffer",
+                                                    "label": "Image File",
+                                                    "required": true,
+                                                    "semantic": "file:data"
+                                                }
+                                            ]
+                                        }
+                                    ],
+                                    "required": true
+                                }
+                            ],
+                            "type": "collection",
+                            "label": "Image",
+                            "name": "value"
+                        }
+                    },
+                    {
+                        "name": "model",
+                        "type": "select",
+                        "label": "Model",
+                        "required": true
+                    },
+                    {
+                        "name": "max_tokens",
+                        "type": "uinteger",
+                        "label": "Max Completion Tokens"
                     },
                     {
                         "name": "temperature",
@@ -214,21 +317,33 @@
             }
         },
         {
-            "id": 2,
+            "id": 3,
             "module": "line:sendANotification",
             "version": 1,
             "parameters": {
-                "__IMTCONN__": 17084
+                "__IMTCONN__": 1093444
+            },
+            "filter": {
+                "name": "警告照片有人臉",
+                "conditions": [
+                    [
+                        {
+                            "a": "{{4.result}}",
+                            "o": "text:equal",
+                            "b": "有人臉"
+                        }
+                    ]
+                ]
             },
             "mapper": {
+                "message": "[{{4.result}}]{{1.caption}}\n{{1.permalink}}",
                 "select": "url",
-                "message": "[{{3.result}}]{{1.caption}}\n{{1.permalink}}",
-                "stickerId": "52114146",
                 "addSticker": true,
+                "notificationDisabled": false,
                 "imageFullsize": "{{1.media_url}}",
                 "imageThumbnail": "{{1.media_url}}",
                 "stickerPackageId": "11539",
-                "notificationDisabled": false
+                "stickerId": "52114146"
             },
             "metadata": {
                 "designer": {
@@ -236,6 +351,15 @@
                     "y": 0
                 },
                 "restore": {
+                    "parameters": {
+                        "__IMTCONN__": {
+                            "label": "My LINE (Notify API) connection",
+                            "data": {
+                                "scoped": "true",
+                                "connection": "line"
+                            }
+                        }
+                    },
                     "expect": {
                         "select": {
                             "label": "By URL"
@@ -245,15 +369,6 @@
                         },
                         "notificationDisabled": {
                             "mode": "chose"
-                        }
-                    },
-                    "parameters": {
-                        "__IMTCONN__": {
-                            "data": {
-                                "scoped": "true",
-                                "connection": "line"
-                            },
-                            "label": "My LINE (Notify API) connection"
                         }
                     }
                 },
@@ -270,10 +385,10 @@
                         "name": "message",
                         "type": "text",
                         "label": "Message",
-                        "required": true,
                         "validate": {
                             "max": 1000
-                        }
+                        },
+                        "required": true
                     },
                     {
                         "name": "select",

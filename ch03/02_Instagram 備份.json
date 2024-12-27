@@ -1,13 +1,14 @@
 {
-    "name": "備份 Instagram",
+    "name": "備份 instagram",
     "flow": [
         {
             "id": 1,
-            "module": "instagram:WatchMedia",
-            "version": 4,
+            "module": "instagram-business:WatchMedia",
+            "version": 1,
             "parameters": {
-                "__IMTCONN__": 21214,
-                "limit": 2
+                "limit": 10,
+                "accountId": "17841471596387704",
+                "__IMTCONN__": 1079923
             },
             "mapper": {},
             "metadata": {
@@ -17,20 +18,29 @@
                 },
                 "restore": {
                     "parameters": {
+                        "accountId": {
+                            "label": "AI 流程自動化工作坊 (@code.weiwei)"
+                        },
                         "__IMTCONN__": {
-                            "label": "Instagram All post (meeinoffice)",
                             "data": {
                                 "scoped": "true",
-                                "connection": "instagram2"
-                            }
+                                "connection": "facebook"
+                            },
+                            "label": "My Facebook connection"
                         }
                     }
                 },
                 "parameters": [
                     {
                         "name": "__IMTCONN__",
-                        "type": "account:instagram2",
+                        "type": "account:facebook",
                         "label": "Connection",
+                        "required": true
+                    },
+                    {
+                        "name": "accountId",
+                        "type": "select",
+                        "label": "Page",
                         "required": true
                     },
                     {
@@ -43,11 +53,11 @@
             }
         },
         {
-            "id": 3,
+            "id": 4,
             "module": "openai-gpt-3:analyzeImages",
             "version": 1,
             "parameters": {
-                "__IMTCONN__": 25783
+                "__IMTCONN__": 192349
             },
             "filter": {
                 "name": "阻擋短片",
@@ -62,17 +72,17 @@
                 ]
             },
             "mapper": {
-                "prompt": "請描述這張照片的內容",
+                "model": "gpt-4o-mini",
+                "top_p": "1",
                 "images": [
                     {
-                        "imageUploadType": "url",
-                        "imageUrl": "{{1.media_url}}"
+                        "imageUrl": "{{1.media_url}}",
+                        "imageUploadType": "url"
                     }
                 ],
-                "model": "gpt-4o-mini",
-                "max_tokens": "300",
+                "prompt": "請描述這張照片的內容",
+                "max_tokens": "2048",
                 "temperature": "1",
-                "top_p": "1",
                 "n_completions": "1"
             },
             "metadata": {
@@ -81,16 +91,11 @@
                     "y": 0
                 },
                 "restore": {
-                    "parameters": {
-                        "__IMTCONN__": {
-                            "label": "My OpenAI connection",
-                            "data": {
-                                "scoped": "true",
-                                "connection": "openai-gpt-3"
-                            }
-                        }
-                    },
                     "expect": {
+                        "model": {
+                            "mode": "chose",
+                            "label": "gpt-4o-mini"
+                        },
                         "images": {
                             "mode": "chose",
                             "items": [
@@ -101,10 +106,15 @@
                                     }
                                 }
                             ]
-                        },
-                        "model": {
-                            "mode": "chose",
-                            "label": "gpt-4o-mini"
+                        }
+                    },
+                    "parameters": {
+                        "__IMTCONN__": {
+                            "data": {
+                                "scoped": "true",
+                                "connection": "openai-gpt-3"
+                            },
+                            "label": "My OpenAI connection"
                         }
                     }
                 },
@@ -125,10 +135,8 @@
                     },
                     {
                         "name": "images",
-                        "type": "array",
-                        "label": "Images",
-                        "required": true,
                         "spec": {
+                            "name": "value",
                             "spec": [
                                 {
                                     "name": "imageUploadType",
@@ -172,9 +180,11 @@
                                 }
                             ],
                             "type": "collection",
-                            "label": "Image",
-                            "name": "value"
-                        }
+                            "label": "Image"
+                        },
+                        "type": "array",
+                        "label": "Images",
+                        "required": true
                     },
                     {
                         "name": "model",
@@ -184,8 +194,8 @@
                     },
                     {
                         "name": "max_tokens",
-                        "type": "number",
-                        "label": "Max Tokens"
+                        "type": "uinteger",
+                        "label": "Max Completion Tokens"
                     },
                     {
                         "name": "temperature",
@@ -214,7 +224,7 @@
             }
         },
         {
-            "id": 7,
+            "id": 6,
             "module": "util:Switcher",
             "version": 1,
             "parameters": {},
@@ -283,11 +293,11 @@
             }
         },
         {
-            "id": 4,
+            "id": 5,
             "module": "notion:appendAPageContent",
             "version": 1,
             "parameters": {
-                "__IMTCONN__": 35653
+                "__IMTCONN__": 1100626
             },
             "mapper": {
                 "page": "08654160-3f3e-4d32-9a55-448c2559eb67",
@@ -302,7 +312,7 @@
                                         "color": "default"
                                     },
                                     "text": {
-                                        "content": "{{7.output}}",
+                                        "content": "{{6.output}}",
                                         "link": "{{1.permalink}}"
                                     }
                                 }
@@ -319,7 +329,7 @@
                                         "color": "default"
                                     },
                                     "text": {
-                                        "content": "{{3.result}}"
+                                        "content": "{{4.result}}"
                                     }
                                 }
                             ]
